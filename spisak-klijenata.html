@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mega WEB - Spisak klijenata</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      color: #1f2937;
+    }
+    header {
+      background: #111827;
+      color: white;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    header h1 { margin: 0; font-size: 24px; }
+    .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .container { max-width: 1400px; margin: 24px auto; padding: 0 16px 40px; }
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+      margin-bottom: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 14px;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 14px;
+      background: #fff;
+    }
+    textarea { min-height: 92px; resize: vertical; }
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    button, .link-btn {
+      border: none;
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+    .primary { background: #2563eb; color: white; }
+    .secondary { background: #e5e7eb; color: #111827; }
+    .danger { background: #dc2626; color: white; }
+    .success { background: #059669; color: white; }
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    th {
+      background: #f9fafb;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+    .muted { color: #6b7280; }
+    .pill {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .hidden { display: none; }
+    .section-title { margin: 0 0 14px; font-size: 18px; }
+    .empty {
+      padding: 24px;
+      text-align: center;
+      color: #6b7280;
+      border: 2px dashed #d1d5db;
+      border-radius: 12px;
+      background: #fafafa;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mega WEB • Spisak klijenata</h1>
+    <div class="header-actions">
+      <a class="link-btn secondary" href="./admin.html">Nazad na admin</a>
+      <button class="primary" type="button" onclick="scrollToForm()">Dodaj klijenta</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <div class="toolbar">
+        <div>
+          <h2 class="section-title">Pregled klijenata</h2>
+          <div class="muted">Podaci se za probu čuvaju u browseru preko localStorage.</div>
+        </div>
+        <input id="searchInput" type="text" placeholder="Pretraga po nazivu, PIB-u ili telefonu" style="max-width: 320px;" />
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>R.br</th>
+              <th>Naziv</th>
+              <th>PIB</th>
+              <th>Telefon</th>
+              <th>E-mail</th>
+              <th>Vodi</th>
+              <th>PDV</th>
+              <th>Akcije</th>
+            </tr>
+          </thead>
+          <tbody id="clientsTableBody"></tbody>
+        </table>
+      </div>
+      <div id="emptyState" class="empty hidden">Još nema unetih klijenata.</div>
+    </div>
+
+    <div class="card" id="formCard">
+      <h2 class="section-title">Dodaj / Izmeni klijenta</h2>
+      <form id="clientForm">
+        <input type="hidden" id="editIndex" value="" />
+
+        <h3>Osnovni podaci</h3>
+        <div class="grid">
+          <div><label for="redniBroj">Redni broj</label><input id="redniBroj" /></div>
+          <div><label for="naziv">Naziv</label><input id="naziv" required /></div>
+          <div><label for="adresa">Adresa</label><input id="adresa" /></div>
+          <div><label for="mesto">Mesto / Opština</label><input id="mesto" /></div>
+          <div><label for="pib">PIB</label><input id="pib" /></div>
+          <div><label for="maticniBroj">Matični broj</label><input id="maticniBroj" /></div>
+          <div><label for="datumOsnivanja">Datum osnivanja</label><input id="datumOsnivanja" type="date" /></div>
+          <div><label for="tekuciRacun">Tekući račun</label><input id="tekuciRacun" /></div>
+        </div>
+
+        <h3>Banka i odgovorno lice</h3>
+        <div class="grid">
+          <div><label for="direktor">Direktor</label><input id="direktor" /></div>
+          <div><label for="datumRodjenjaDirektora">Datum rođenja direktora</label><input id="datumRodjenjaDirektora" type="date" /></div>
+        </div>
+
+        <h3>Kontakt</h3>
+        <div class="grid">
+          <div><label for="email">E-mail</label><input id="email" type="email" /></div>
+          <div><label for="telefon">Telefon</label><input id="telefon" /></div>
+        </div>
+
+        <h3>Interno praćenje</h3>
+        <div class="grid">
+          <div><label for="korisnikKojiVodi">Korisnik koji vodi</label><input id="korisnikKojiVodi" /></div>
+          <div><label for="sertifBroj">Sertif broj</label><input id="sertifBroj" /></div>
+          <div><label for="sertifIstice">Sertif ističe</label><input id="sertifIstice" type="date" /></div>
+          <div><label for="programVodi">Program u kom se vodi</label><input id="programVodi" /></div>
+        </div>
+
+        <h3>Poslovni podaci</h3>
+        <div class="grid">
+          <div><label for="delatnostOpis">Delatnost i opis</label><textarea id="delatnostOpis"></textarea></div>
+          <div><label for="pdvStatus">PDV status</label>
+            <select id="pdvStatus">
+              <option value="">Izaberi</option>
+              <option>U sistemu PDV</option>
+              <option>Nije u sistemu PDV</option>
+            </select>
+          </div>
+          <div><label for="ugovorKnjig">Ugovor knjig.</label><input id="ugovorKnjig" type="date" /></div>
+          <div><label for="cenaOsnovna">Cena osnovna</label><input id="cenaOsnovna" type="number" step="0.01" /></div>
+          <div><label for="dodatniPosao">Dodatni posao</label><input id="dodatniPosao" type="number" step="0.01" /></div>
+          <div><label for="zavrsniRacun">Završni račun</label><input id="zavrsniRacun" type="number" step="0.01" /></div>
+          <div><label for="aneksDatum">Aneks datum</label><input id="aneksDatum" type="date" /></div>
+          <div><label for="cenaAneks">Cena aneks</label><input id="cenaAneks" type="number" step="0.01" /></div>
+        </div>
+
+        <div class="actions">
+          <button class="success" type="submit">Sačuvaj klijenta</button>
+          <button class="secondary" type="button" onclick="resetForm()">Očisti formu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'megaweb_clients';
+    const form = document.getElementById('clientForm');
+    const tableBody = document.getElementById('clientsTableBody');
+    const emptyState = document.getElementById('emptyState');
+    const searchInput = document.getElementById('searchInput');
+
+    function getClients() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    }
+
+    function saveClients(clients) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(clients));
+    }
+
+    function formData() {
+      return {
+        redniBroj: document.getElementById('redniBroj').value.trim(),
+        naziv: document.getElementById('naziv').value.trim(),
+        adresa: document.getElementById('adresa').value.trim(),
+        mesto: document.getElementById('mesto').value.trim(),
+        pib: document.getElementById('pib').value.trim(),
+        maticniBroj: document.getElementById('maticniBroj').value.trim(),
+        datumOsnivanja: document.getElementById('datumOsnivanja').value,
+        tekuciRacun: document.getElementById('tekuciRacun').value.trim(),
+        direktor: document.getElementById('direktor').value.trim(),
+        datumRodjenjaDirektora: document.getElementById('datumRodjenjaDirektora').value,
+        email: document.getElementById('email').value.trim(),
+        telefon: document.getElementById('telefon').value.trim(),
+        korisnikKojiVodi: document.getElementById('korisnikKojiVodi').value.trim(),
+        sertifBroj: document.getElementById('sertifBroj').value.trim(),
+        sertifIstice: document.getElementById('sertifIstice').value,
+        programVodi: document.getElementById('programVodi').value.trim(),
+        delatnostOpis: document.getElementById('delatnostOpis').value.trim(),
+        pdvStatus: document.getElementById('pdvStatus').value,
+        ugovorKnjig: document.getElementById('ugovorKnjig').value,
+        cenaOsnovna: document.getElementById('cenaOsnovna').value,
+        dodatniPosao: document.getElementById('dodatniPosao').value,
+        zavrsniRacun: document.getElementById('zavrsniRacun').value,
+        aneksDatum: document.getElementById('aneksDatum').value,
+        cenaAneks: document.getElementById('cenaAneks').value,
+      };
+    }
+
+    function resetForm() {
+      form.reset();
+      document.getElementById('editIndex').value = '';
+    }
+
+    function scrollToForm() {
+      document.getElementById('formCard').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function editClient(index) {
+      const clients = getClients();
+      const client = clients[index];
+      if (!client) return;
+      document.getElementById('editIndex').value = index;
+      Object.keys(client).forEach(key => {
+        const el = document.getElementById(key);
+        if (el) el.value = client[key] || '';
+      });
+      scrollToForm();
+    }
+
+    function deleteClient(index) {
+      const clients = getClients();
+      const client = clients[index];
+      if (!client) return;
+      if (!confirm(`Obrisati klijenta: ${client.naziv}?`)) return;
+      clients.splice(index, 1);
+      saveClients(clients);
+      renderTable();
+    }
+
+    function renderTable() {
+      const clients = getClients();
+      const term = searchInput.value.trim().toLowerCase();
+      const filtered = clients.filter(client => {
+        const text = `${client.naziv} ${client.pib} ${client.telefon} ${client.email}`.toLowerCase();
+        return text.includes(term);
+      });
+
+      tableBody.innerHTML = '';
+      if (!filtered.length) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      filtered.forEach((client, realIndex) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${client.redniBroj || '-'}</td>
+          <td><strong>${client.naziv || '-'}</strong><br><span class="muted">${client.adresa || ''}</span></td>
+          <td>${client.pib || '-'}</td>
+          <td>${client.telefon || '-'}</td>
+          <td>${client.email || '-'}</td>
+          <td>${client.korisnikKojiVodi || '-'}</td>
+          <td>${client.pdvStatus ? `<span class="pill">${client.pdvStatus}</span>` : '-'}</td>
+          <td>
+            <div class="actions">
+              <button class="secondary" type="button" onclick="editClient(${realIndex})">Izmeni</button>
+              <button class="danger" type="button" onclick="deleteClient(${realIndex})">Obriši</button>
+            </div>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const clients = getClients();
+      const data = formData();
+      const editIndex = document.getElementById('editIndex').value;
+
+      if (!data.naziv) {
+        alert('Naziv je obavezan.');
+        return;
+      }
+
+      if (editIndex !== '') {
+        clients[Number(editIndex)] = data;
+      } else {
+        clients.push(data);
+      }
+
+      saveClients(clients);
+      resetForm();
+      renderTable();
+      alert('Klijent je uspešno sačuvan.');
+    });
+
+    searchInput.addEventListener('input', renderTable);
+    renderTable();
+  </script>
+</body>
+</html>
